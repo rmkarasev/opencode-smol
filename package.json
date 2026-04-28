@@ -1,0 +1,39 @@
+{
+  "name": "smol",
+  "version": "0.1.0",
+  "description": "Small, Minimal, Optimal, Light — a token-frugal opencode plugin for solo developers",
+  "type": "module",
+  "main": "./plugin.ts",
+  "exports": {
+    ".": "./plugin.ts"
+  },
+  "bin": {
+    "smol": "./tools/install.mjs"
+  },
+  "files": [
+    "plugin.ts",
+    "skills",
+    "agents",
+    "tools",
+    "README.md",
+    "SPEC.md"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": "*"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "latest",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": ["opencode", "plugin", "tdd", "agent", "minimalist"],
+  "license": "MIT"
+}
