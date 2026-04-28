@@ -1,7 +1,16 @@
 {
-  "name": "smol",
+  "name": "opencode-smol",
   "version": "0.1.0",
   "description": "Small, Minimal, Optimal, Light — a token-frugal opencode plugin for solo developers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Poorgramer-Zack/opencode-smol.git"
+  },
+  "homepage": "https://github.com/Poorgramer-Zack/opencode-smol#readme",
+  "bugs": "https://github.com/Poorgramer-Zack/opencode-smol/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./plugin.ts",
   "exports": {
@@ -18,7 +27,8 @@
     "commands",
     "tools",
     "README.md",
-    "SPEC.md"
+    "SPEC.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "vitest run",

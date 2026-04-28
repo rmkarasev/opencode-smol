@@ -59,7 +59,7 @@ async function writePluginShim(root, force) {
   await mkdir(dir, { recursive: true })
   const file = join(dir, 'smol.ts')
   if (!force && (await exists(file))) return false
-  await writeFile(file, `export { SmolPlugin as default } from 'smol/plugin'\n`)
+  await writeFile(file, `export { SmolPlugin as default } from 'opencode-smol/plugin'\n`)
   return true
 }
 
