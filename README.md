@@ -241,7 +241,7 @@ npm install
 npm test
 ```
 
-38 tests across codemap, plugin hooks, config, and tools.
+39 tests across codemap, plugin hooks, config, and tools.
 
 ---
 
