@@ -1,6 +1,6 @@
 ---
 description: Conductor orchestrates plan → build → review end-to-end
-agent: conductor
+agent: build
 ---
 
 Use the `smol-auto` skill. Orchestrate the full pipeline: planner →

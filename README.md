@@ -7,7 +7,9 @@
 ## What you get
 
 - **6 slash commands**: `/smol-plan`, `/smol-build`, `/smol-fast`, `/smol-review`, `/smol-auto`, `/smol-map`
-- **6 agents**: `conductor` (primary), `planner`, `coder`, `reviewer`, `mapper`, `scout`
+- **Conductor** as the default primary agent (replaces opencode's built-in `build`)
+- **Planner** replaces opencode's built-in `plan` agent
+- **4 subagents**: `coder`, `reviewer`, `mapper`, `scout`
 - **3 native tools**: `smol_codemap`, `smol_wiki`, `smol_plan` — schema-validated, no shell needed
 - **Session hook** that points the LLM at `.smol/codemap.md` and `.smol/wiki/`
 - **Compaction hook** that re-injects codemap + latest plan so project memory survives long sessions
@@ -68,6 +70,26 @@ See `SPEC.md`. Short version: most agent frameworks are over-engineered for solo
 ```
 
 Add `.smol/` to `.gitignore` if you don't want to commit project memory; commit it if you do (recommended for shared codebases).
+
+## Per-agent model config
+
+Create `.smol/smol.json` to override the model (and variant) used by each
+smol agent. Internal smol names are mapped to opencode keys automatically
+(`conductor` → `build`, `planner` → `plan`).
+
+```json
+{
+  "agents": {
+    "conductor": { "model": "anthropic/claude-sonnet-4-5", "variant": "high" },
+    "planner": "openai/gpt-5-mini",
+    "coder": { "model": "anthropic/claude-haiku-4-5" },
+    "reviewer": { "model": "openai/gpt-5" }
+  }
+}
+```
+
+A bare string is shorthand for `{ "model": "..." }`. Unknown fields
+(such as `variant`) are passed through to opencode's agent config.
 
 ## Native tools
 

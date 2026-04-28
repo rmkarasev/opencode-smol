@@ -2,7 +2,7 @@
 /* smol — copies bundled agents, skills, and commands into the consumer's
    .opencode/ (or root with --profile). Subcommands: install | update.
    Idempotent. update overwrites; install skips plugin shim if it exists. */
-import { readdir, mkdir, copyFile, stat, writeFile } from 'node:fs/promises'
+import { readdir, mkdir, copyFile, stat, writeFile, unlink } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,10 +13,18 @@ async function exists(p) {
   try { await stat(p); return true } catch { return false }
 }
 
-async function copyFlat(srcDir, destDir) {
+async function copyAgents(srcDir, destDir) {
   if (!(await exists(srcDir))) return 0
   await mkdir(destDir, { recursive: true })
-  const files = (await readdir(srcDir)).filter((f) => f.endsWith('.md'))
+  // conductor and planner are injected via the plugin's config hook,
+  // so they don't need to live as standalone agent files
+  const skip = new Set(['conductor.md', 'planner.md'])
+  // remove stale files left by older versions
+  for (const name of skip) {
+    const stale = join(destDir, name)
+    if (await exists(stale)) await unlink(stale)
+  }
+  const files = (await readdir(srcDir)).filter((f) => f.endsWith('.md') && !skip.has(f))
   for (const f of files) await copyFile(join(srcDir, f), join(destDir, f))
   return files.length
 }
@@ -36,6 +44,14 @@ async function copySkills(root) {
     count++
   }
   return count
+}
+
+async function copyCommands(srcDir, destDir) {
+  if (!(await exists(srcDir))) return 0
+  await mkdir(destDir, { recursive: true })
+  const files = (await readdir(srcDir)).filter((f) => f.endsWith('.md'))
+  for (const f of files) await copyFile(join(srcDir, f), join(destDir, f))
+  return files.length
 }
 
 async function writePluginShim(root, force) {
@@ -60,9 +76,9 @@ async function main() {
   const { cmd, target, profile } = parseArgs(process.argv)
   const base = target ? resolve(target) : process.cwd()
   const root = profile ? base : join(base, '.opencode')
-  const agents = await copyFlat(join(PKG_ROOT, 'agents'), join(root, 'agent'))
+  const agents = await copyAgents(join(PKG_ROOT, 'agents'), join(root, 'agent'))
   const skills = await copySkills(root)
-  const commands = await copyFlat(join(PKG_ROOT, 'commands'), join(root, 'command'))
+  const commands = await copyCommands(join(PKG_ROOT, 'commands'), join(root, 'command'))
   const shim = await writePluginShim(root, cmd === 'update')
   const verb = cmd === 'update' ? 'updated' : 'installed'
   console.log(

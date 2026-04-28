@@ -1,0 +1,15 @@
+feat(config): conductor as default build, planner replaces plan + per-agent model overrides
+
+- New 'config' hook: replaces opencode's built-in build/plan agents
+  - conductor.md prompt -> agent.build (mode primary, default agent)
+  - planner.md prompt -> agent.plan (mode primary)
+  - coder/reviewer/mapper/scout registered as subagents
+- New .smol/smol.json: per-agent model + variant overrides
+  - String shorthand: { coder: 'openai/gpt-5' }
+  - Object form: { conductor: { model, variant } }
+  - Variant passes through to opencode AgentConfig (extra field)
+- install CLI now skips conductor.md and planner.md, removes stale copies
+- Smol commands updated to target build (auto) and plan (plan)
+- 9 new tests (parseAgentMd + runConfig + smol.json overrides)
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

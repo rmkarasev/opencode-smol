@@ -2,6 +2,8 @@ import type { Plugin } from '@opencode-ai/plugin'
 import { mkdir, writeFile, readFile, access, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { smolCodemapTool, smolWikiTool, smolPlanTool } from './tools/plugin-tools'
+import { loadAgent } from './tools/agent-loader'
+import { applyOverride, loadSmolJson, SMOL_TO_OC, type SmolJson } from './tools/smol-config'
 
 const POINTER =
   '<smol>Check .smol/codemap.md and .smol/wiki/{memory,preferences,pitfalls}.md when relevant. ' +
@@ -77,11 +79,47 @@ async function runEvent(
   }
 }
 
+type AgentMap = Record<string, Record<string, unknown> | undefined>
+
+async function buildAgentConfig(
+  smolName: string,
+  defaultMode: 'primary' | 'subagent',
+  override: SmolJson['agents'] extends infer A ? A extends Record<string, infer V> ? V : undefined : undefined,
+): Promise<Record<string, unknown>> {
+  const doc = await loadAgent(smolName)
+  const base: Record<string, unknown> = {
+    description: doc.meta.description ?? `smol ${smolName}`,
+    mode: defaultMode,
+    prompt: doc.prompt,
+  }
+  if (doc.meta.tools) base.tools = doc.meta.tools
+  return applyOverride(base, override)
+}
+
+async function runConfig(
+  ctx: { projectRoot: string },
+  config: { agent?: AgentMap } & Record<string, unknown>,
+): Promise<void> {
+  const smol = await loadSmolJson(ctx.projectRoot)
+  const overrides = smol.agents ?? {}
+  config.agent = config.agent ?? {}
+  // conductor → build (default primary), planner → plan (alt primary)
+  config.agent.build = await buildAgentConfig('conductor', 'primary', overrides.conductor)
+  config.agent.plan = await buildAgentConfig('planner', 'primary', overrides.planner)
+  // remaining smol agents as subagents
+  for (const name of ['coder', 'reviewer', 'mapper', 'scout']) {
+    const ocName = SMOL_TO_OC[name]
+    config.agent[ocName] = await buildAgentConfig(name, 'subagent', overrides[name])
+  }
+}
+
 export const __test__ = {
   runSystemTransform,
   runCompacting,
   runEvent,
+  runConfig,
   ensureWiki,
+  buildAgentConfig,
   POINTER,
 }
 
@@ -103,6 +141,12 @@ export const SmolPlugin: Plugin = async (context) => {
     },
     event: async (input) => {
       await runEvent({ projectRoot }, input as { event?: { type?: string } })
+    },
+    config: async (input) => {
+      await runConfig(
+        { projectRoot },
+        input as { agent?: AgentMap } & Record<string, unknown>,
+      )
     },
     tool: {
       smol_codemap: smolCodemapTool,
