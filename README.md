@@ -87,30 +87,45 @@ so re-runs only touch changed folders.
 
 ```bash
 npm install -D opencode-smol
-npx smol install      # copies bundled agents, skills, commands into .opencode/
 ```
 
-To upgrade after `npm update opencode-smol`:
-
-```bash
-npx smol update       # overwrites previous copies, idempotent
-```
-
-The plugin auto-loads via the generated `.opencode/plugin/smol.ts`
-shim — no config edits required. If you prefer manual loading, drop
-this into `opencode.json`:
+Then add to `opencode.json` (or `opencode.jsonc`) at your project root or in `~/.config/opencode/`:
 
 ```json
-{ "plugins": ["opencode-smol"] }
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-smol"]
+}
+```
+
+That is it. Restart opencode and the 6 commands, 6 agents, skills, tools and hooks are all live. There is no CLI to run, no files to copy.
+
+To upgrade:
+
+```bash
+npm update opencode-smol
 ```
 
 ### Using with [`ocx`](https://github.com/kdcokenny/ocx) profiles
 
+Create a profile that has `opencode-smol` as a regular npm dependency:
+
 ```bash
-cd ~/.config/opencode/profiles/<profile>
+mkdir -p ~/.config/opencode/profiles/smol && cd $_
+npm init -y
 npm install opencode-smol
-npx smol install --profile .
 ```
+
+Add `opencode.jsonc` in the same directory:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-smol"]
+}
+```
+
+Then launch with `ocx --profile smol`.
 
 ---
 
@@ -241,7 +256,7 @@ npm install
 npm test
 ```
 
-39 tests across codemap, plugin hooks, config, and tools.
+42 tests across codemap, plugin hooks, config, and tools.
 
 ---
 

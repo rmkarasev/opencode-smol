@@ -1,6 +1,6 @@
 {
   "name": "opencode-smol",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Small, Minimal, Optimal, Light — a token-frugal opencode plugin for solo developers",
   "repository": {
     "type": "git",
@@ -17,15 +17,15 @@
     ".": "./plugin.ts",
     "./plugin": "./plugin.ts"
   },
-  "bin": {
-    "smol": "./tools/install.mjs"
-  },
   "files": [
     "plugin.ts",
     "skills",
     "agents",
     "commands",
-    "tools",
+    "tools/agent-loader.ts",
+    "tools/plugin-tools.ts",
+    "tools/smol-config.ts",
+    "tools/codemap.mjs",
     "README.md",
     "SPEC.md",
     "LICENSE"

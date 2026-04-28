@@ -16,7 +16,7 @@ export type AgentMeta = {
 
 export type AgentDoc = { meta: AgentMeta; prompt: string }
 
-const FM = /^---\n([\s\S]*?)\n---\n?/
+const FM = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
 export function parseAgentMd(src: string): AgentDoc {
   const m = src.match(FM)
@@ -24,7 +24,7 @@ export function parseAgentMd(src: string): AgentDoc {
   const meta: Record<string, unknown> = {}
   let tools: Record<string, boolean> | undefined
   let inTools = false
-  for (const raw of m[1].split('\n')) {
+  for (const raw of m[1].split(/\r?\n/)) {
     if (!raw.trim()) continue
     if (/^tools:\s*$/.test(raw)) { inTools = true; tools = {}; continue }
     if (inTools && /^\s+\w+:\s*(true|false)/.test(raw)) {

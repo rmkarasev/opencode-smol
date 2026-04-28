@@ -104,6 +104,43 @@ describe('runConfig hook', () => {
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 
+  it('registers all 6 slash commands programmatically with template + agent', async () => {
+    const root = tmp()
+    try {
+      const config: any = {}
+      await runConfig({ projectRoot: root }, config)
+      for (const name of ['smol-plan', 'smol-build', 'smol-review', 'smol-auto', 'smol-fast', 'smol-map']) {
+        const cmd = config.command[name]
+        expect(cmd, `command ${name} should exist`).toBeTruthy()
+        expect(cmd.template).toBeTruthy()
+        expect(cmd.agent).toBeTruthy()
+        expect(cmd.description).toBeTruthy()
+      }
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  it('appends bundled skills directory to config.skills.paths', async () => {
+    const root = tmp()
+    try {
+      const config: any = {}
+      await runConfig({ projectRoot: root }, config)
+      expect(Array.isArray(config.skills.paths)).toBe(true)
+      const hasSmolSkills = config.skills.paths.some((p: string) => p.endsWith('skills'))
+      expect(hasSmolSkills).toBe(true)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  it('does not duplicate skills path on repeated runs', async () => {
+    const root = tmp()
+    try {
+      const config: any = {}
+      await runConfig({ projectRoot: root }, config)
+      await runConfig({ projectRoot: root }, config)
+      const occurrences = config.skills.paths.filter((p: string) => p.endsWith('skills')).length
+      expect(occurrences).toBe(1)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
   it('handles malformed smol.json gracefully', async () => {
     const root = tmp()
     try {

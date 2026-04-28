@@ -1,9 +1,16 @@
 import type { Plugin } from '@opencode-ai/plugin'
 import { mkdir, writeFile, readFile, access, readdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { smolCodemapTool, smolWikiTool, smolPlanTool } from './tools/plugin-tools'
-import { loadAgent } from './tools/agent-loader'
+import { loadAgent, parseAgentMd } from './tools/agent-loader'
 import { applyOverride, loadSmolJson, type AgentOverride } from './tools/smol-config'
+
+const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)))
+const SKILLS_DIR = join(PKG_ROOT, 'skills')
+const COMMANDS_DIR = join(PKG_ROOT, 'commands')
+
+const COMMANDS = ['smol-plan', 'smol-build', 'smol-review', 'smol-auto', 'smol-fast', 'smol-map'] as const
 
 const POINTER =
   '<smol>Check .smol/codemap.md and .smol/wiki/{memory,preferences,pitfalls}.md when relevant. ' +
@@ -80,6 +87,20 @@ async function runEvent(
 }
 
 type AgentMap = Record<string, Record<string, unknown> | undefined>
+type CommandEntry = { template: string; description?: string; agent?: string; model?: string; subtask?: boolean }
+type CommandMap = Record<string, CommandEntry | undefined>
+
+async function loadCommand(name: string): Promise<CommandEntry> {
+  const txt = await readFile(join(COMMANDS_DIR, `${name}.md`), 'utf8')
+  const doc = parseAgentMd(txt)
+  const meta = doc.meta as Record<string, unknown>
+  const out: CommandEntry = { template: doc.prompt }
+  if (typeof meta.description === 'string') out.description = meta.description
+  if (typeof meta.agent === 'string') out.agent = meta.agent
+  if (typeof meta.model === 'string') out.model = meta.model
+  if (typeof meta.subtask === 'boolean') out.subtask = meta.subtask
+  return out
+}
 
 async function buildAgentConfig(
   smolName: string,
@@ -108,7 +129,12 @@ function demote(existing: Record<string, unknown> | undefined): Record<string, u
 
 async function runConfig(
   ctx: { projectRoot: string },
-  config: { agent?: AgentMap; default_agent?: string } & Record<string, unknown>,
+  config: {
+    agent?: AgentMap
+    command?: CommandMap
+    default_agent?: string
+    skills?: { paths?: string[] }
+  } & Record<string, unknown>,
 ): Promise<void> {
   const smol = await loadSmolJson(ctx.projectRoot)
   const overrides = smol.agents ?? {}
@@ -124,6 +150,19 @@ async function runConfig(
   config.agent.plan = demote(config.agent.plan)
   // Make Conductor the default unless the user explicitly set one.
   if (!config.default_agent) config.default_agent = 'conductor'
+
+  // Register slash commands programmatically (no .opencode/command file copy).
+  config.command = config.command ?? {}
+  for (const name of COMMANDS) {
+    config.command[name] = await loadCommand(name)
+  }
+
+  // Expose bundled skills directory so opencode discovers them lazily.
+  config.skills = config.skills ?? {}
+  config.skills.paths = config.skills.paths ?? []
+  if (!config.skills.paths.includes(SKILLS_DIR)) {
+    config.skills.paths.push(SKILLS_DIR)
+  }
 }
 
 export const __test__ = {
@@ -133,7 +172,10 @@ export const __test__ = {
   runConfig,
   ensureWiki,
   buildAgentConfig,
+  loadCommand,
   POINTER,
+  SKILLS_DIR,
+  COMMANDS,
 }
 
 export const SmolPlugin: Plugin = async (context) => {
@@ -158,7 +200,12 @@ export const SmolPlugin: Plugin = async (context) => {
     config: async (input) => {
       await runConfig(
         { projectRoot },
-        input as { agent?: AgentMap; default_agent?: string } & Record<string, unknown>,
+        input as {
+          agent?: AgentMap
+          command?: CommandMap
+          default_agent?: string
+          skills?: { paths?: string[] }
+        } & Record<string, unknown>,
       )
     },
     tool: {
