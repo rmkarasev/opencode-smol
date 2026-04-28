@@ -1717,12 +1717,364 @@ git commit -m "fix: smoke-test corrections"
 
 ---
 
+## Task 23: Native tools — `smol_codemap`, `smol_wiki`, `smol_plan`
+
+Register opencode-native tools so agents call them directly instead of spawning the node CLI. Schema-validated via zod, smaller agent prompts.
+
+**Files:**
+- Create: `tools/plugin-tools.ts`
+- Create: `tests/plugin-tools.test.ts`
+
+- [ ] **Step 1: Write failing tests.**
+
+```ts
+// tests/plugin-tools.test.ts
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdtempSync, readFileSync, existsSync, rmSync, mkdirSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { __test__ } from '../tools/plugin-tools.ts'
+
+const { runCodemap, runWiki, runPlan } = __test__
+
+let dir: string
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), 'smol-pt-')) })
+afterEach(() => rmSync(dir, { recursive: true, force: true }))
+
+describe('smol_codemap tool', () => {
+  it('init creates .smol/codemap.json', async () => {
+    mkdirSync(join(dir, 'src'), { recursive: true })
+    writeFileSync(join(dir, 'src/a.ts'), 'export const a = 1')
+    const result = await runCodemap({ action: 'init' }, { directory: dir })
+    expect(existsSync(join(dir, '.smol/codemap.json'))).toBe(true)
+    expect(result).toMatch(/codemap/i)
+  })
+})
+
+describe('smol_wiki tool', () => {
+  it('appends a dated entry, dedups identical text', async () => {
+    await runWiki({ kind: 'memory', entry: 'uses pnpm not npm' }, { directory: dir })
+    await runWiki({ kind: 'memory', entry: 'uses pnpm not npm' }, { directory: dir })
+    const txt = readFileSync(join(dir, '.smol/wiki/memory.md'), 'utf8')
+    const matches = txt.match(/uses pnpm not npm/g) ?? []
+    expect(matches.length).toBe(1)
+    expect(txt).toMatch(/\d{4}-\d{2}-\d{2}/)
+  })
+
+  it('rejects entries longer than 200 chars', async () => {
+    await expect(
+      runWiki({ kind: 'memory', entry: 'x'.repeat(201) }, { directory: dir }),
+    ).rejects.toThrow(/200/)
+  })
+})
+
+describe('smol_plan tool', () => {
+  it('writes a dated plan file under .smol/plans/', async () => {
+    const result = await runPlan({ topic: 'auth refactor', content: '# plan\n- step 1' }, { directory: dir })
+    const files = require('node:fs').readdirSync(join(dir, '.smol/plans'))
+    expect(files.length).toBe(1)
+    expect(files[0]).toMatch(/auth-refactor\.md$/)
+    expect(result).toMatch(/auth-refactor/)
+  })
+})
+```
+
+- [ ] **Step 2: Run tests, expect failure.**
+
+Run: `npm test -- plugin-tools`
+
+- [ ] **Step 3: Implement `tools/plugin-tools.ts`.**
+
+```ts
+import { tool } from '@opencode-ai/plugin/tool'
+import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
+import { join } from 'node:path'
+import { runCli as runCodemapCli } from './codemap.mjs'
+
+const z = tool.schema
+
+async function exists(p: string): Promise<boolean> {
+  try { await access(p); return true } catch { return false }
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function slugify(s: string): string {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)
+}
+
+async function runCodemap(args: { action: 'init' | 'update' | 'changes' }, ctx: { directory: string }): Promise<string> {
+  const out = await runCodemapCli([args.action, '--root', ctx.directory])
+  return out || `codemap ${args.action} done`
+}
+
+async function runWiki(args: { kind: 'memory' | 'preferences' | 'pitfalls'; entry: string }, ctx: { directory: string }): Promise<string> {
+  if (args.entry.length > 200) throw new Error('wiki entry must be ≤200 chars')
+  const file = join(ctx.directory, '.smol/wiki', `${args.kind}.md`)
+  await mkdir(join(ctx.directory, '.smol/wiki'), { recursive: true })
+  const current = (await exists(file)) ? await readFile(file, 'utf8') : `# ${args.kind}\n`
+  if (current.includes(args.entry)) return `wiki ${args.kind}: duplicate, skipped`
+  const next = current.trimEnd() + `\n- ${today()}: ${args.entry}\n`
+  await writeFile(file, next)
+  return `wiki ${args.kind}: appended`
+}
+
+async function runPlan(args: { topic: string; content: string }, ctx: { directory: string }): Promise<string> {
+  const slug = slugify(args.topic)
+  const name = `${today()}-${slug}.md`
+  const file = join(ctx.directory, '.smol/plans', name)
+  await mkdir(join(ctx.directory, '.smol/plans'), { recursive: true })
+  await writeFile(file, args.content)
+  return `plan saved: .smol/plans/${name}`
+}
+
+export const __test__ = { runCodemap, runWiki, runPlan }
+
+export const smolCodemapTool = tool({
+  description: 'Maintain the smol codemap. action=init creates baseline, update writes changed templates, changes lists modified files.',
+  args: { action: z.enum(['init', 'update', 'changes']) },
+  async execute(args, ctx) {
+    return runCodemap(args, { directory: ctx.directory })
+  },
+})
+
+export const smolWikiTool = tool({
+  description: 'Append a dated entry to .smol/wiki/{memory|preferences|pitfalls}.md. Dedups identical entries. Max 200 chars.',
+  args: {
+    kind: z.enum(['memory', 'preferences', 'pitfalls']),
+    entry: z.string().min(1).max(200),
+  },
+  async execute(args, ctx) {
+    return runWiki(args, { directory: ctx.directory })
+  },
+})
+
+export const smolPlanTool = tool({
+  description: 'Save a markdown plan under .smol/plans/YYYY-MM-DD-<slug>.md.',
+  args: {
+    topic: z.string().min(1).max(80),
+    content: z.string().min(1),
+  },
+  async execute(args, ctx) {
+    return runPlan(args, { directory: ctx.directory })
+  },
+})
+```
+
+> **Note:** `tools/codemap.mjs` already exposes `runCli(argv)` returning a string and accepts `--root <dir>`. No refactor needed.
+
+- [ ] **Step 4: Run tests, expect pass.**
+
+Run: `npm test`
+Expected: all tests green.
+
+- [ ] **Step 5: Commit.**
+
+```bash
+git add tools/plugin-tools.ts tests/plugin-tools.test.ts tools/codemap.mjs
+git commit -m "feat(plugin): native smol_codemap/smol_wiki/smol_plan tools"
+```
+
+---
+
+## Task 24: `experimental.session.compacting` hook
+
+Inject `.smol/codemap.md` head + latest `.smol/plans/*.md` into compaction context so smol's project memory survives compactions.
+
+**Files:**
+- Edit: `plugin.ts`
+- Create: `tests/plugin.compacting.test.ts`
+
+- [ ] **Step 1: Write failing test.**
+
+```ts
+// tests/plugin.compacting.test.ts
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { __test__ } from '../plugin.ts'
+
+const { runCompacting } = __test__
+
+let dir: string
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), 'smol-c-')) })
+afterEach(() => rmSync(dir, { recursive: true, force: true }))
+
+describe('compacting hook', () => {
+  it('injects codemap head and latest plan into context', async () => {
+    mkdirSync(join(dir, '.smol/plans'), { recursive: true })
+    writeFileSync(join(dir, '.smol/codemap.md'), '# codemap\nfile a -> b\n'.repeat(50))
+    writeFileSync(join(dir, '.smol/plans/2026-04-28-foo.md'), '# plan foo')
+    writeFileSync(join(dir, '.smol/plans/2026-04-29-bar.md'), '# plan bar')
+    const out: { context: string[]; prompt?: string } = { context: [] }
+    await runCompacting({ projectRoot: dir }, out)
+    expect(out.context.length).toBeGreaterThanOrEqual(2)
+    expect(out.context.some((c) => c.includes('codemap'))).toBe(true)
+    expect(out.context.some((c) => c.includes('plan bar'))).toBe(true)
+  })
+
+  it('is a no-op when .smol does not exist', async () => {
+    const out: { context: string[]; prompt?: string } = { context: [] }
+    await runCompacting({ projectRoot: dir }, out)
+    expect(out.context.length).toBe(0)
+  })
+})
+```
+
+- [ ] **Step 2: Run, expect failure.**
+
+- [ ] **Step 3: Add `runCompacting` and wire hook in `plugin.ts`.**
+
+Append to `plugin.ts`:
+
+```ts
+import { readdir, stat } from 'node:fs/promises'
+
+const MAX_BYTES = 2048
+
+async function readHead(path: string): Promise<string | null> {
+  if (!(await exists(path))) return null
+  const txt = await readFile(path, 'utf8')
+  return txt.length > MAX_BYTES ? txt.slice(0, MAX_BYTES) + '\n…[truncated]' : txt
+}
+
+async function latestPlan(projectRoot: string): Promise<string | null> {
+  const plansDir = join(projectRoot, '.smol/plans')
+  if (!(await exists(plansDir))) return null
+  const entries = await readdir(plansDir)
+  const md = entries.filter((n) => n.endsWith('.md')).sort()
+  if (md.length === 0) return null
+  return readHead(join(plansDir, md[md.length - 1]))
+}
+
+async function runCompacting(
+  ctx: { projectRoot: string },
+  output: { context: string[]; prompt?: string },
+): Promise<void> {
+  const codemap = await readHead(join(ctx.projectRoot, '.smol/codemap.md'))
+  if (codemap) output.context.push(`# .smol/codemap.md (head)\n${codemap}`)
+  const plan = await latestPlan(ctx.projectRoot)
+  if (plan) output.context.push(`# .smol/plans/<latest>\n${plan}`)
+}
+
+// extend __test__ export:
+//   export const __test__ = { runSystemTransform, runCompacting, POINTER }
+// extend SmolPlugin return:
+//   'experimental.session.compacting': async (_input, output) => {
+//     await runCompacting({ projectRoot }, output as { context: string[]; prompt?: string })
+//   },
+```
+
+Also add `readFile` to the existing `node:fs/promises` import.
+
+- [ ] **Step 4: Run, expect pass.**
+
+- [ ] **Step 5: Commit.**
+
+```bash
+git add plugin.ts tests/plugin.compacting.test.ts
+git commit -m "feat(plugin): inject codemap+plan into compaction context"
+```
+
+---
+
+## Task 25: Move wiki bootstrap to `event` hook
+
+Wiki creation should happen once per session on `session.created`, not on every `system.transform` call. Keeps system.transform purely about the pointer.
+
+**Files:**
+- Edit: `plugin.ts`
+- Create: `tests/plugin.event.test.ts`
+
+- [ ] **Step 1: Write failing test.**
+
+```ts
+// tests/plugin.event.test.ts
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdtempSync, existsSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { __test__ } from '../plugin.ts'
+
+const { runEvent } = __test__
+
+let dir: string
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), 'smol-e-')) })
+afterEach(() => rmSync(dir, { recursive: true, force: true }))
+
+describe('event hook', () => {
+  it('creates wiki files on session.created', async () => {
+    await runEvent({ projectRoot: dir }, { event: { type: 'session.created' } } as any)
+    expect(existsSync(join(dir, '.smol/wiki/memory.md'))).toBe(true)
+    expect(existsSync(join(dir, '.smol/wiki/preferences.md'))).toBe(true)
+    expect(existsSync(join(dir, '.smol/wiki/pitfalls.md'))).toBe(true)
+  })
+
+  it('ignores other events', async () => {
+    await runEvent({ projectRoot: dir }, { event: { type: 'message.updated' } } as any)
+    expect(existsSync(join(dir, '.smol/wiki'))).toBe(false)
+  })
+})
+```
+
+- [ ] **Step 2: Run, expect failure.**
+
+- [ ] **Step 3: Edit `plugin.ts`.**
+
+1. Remove `await ensureWiki(...)` from `runSystemTransform` (system.transform now only pushes the pointer).
+2. Add:
+
+```ts
+async function runEvent(ctx: { projectRoot: string }, input: { event: { type: string } }): Promise<void> {
+  if (input.event?.type === 'session.created') {
+    await ensureWiki(ctx.projectRoot)
+  }
+}
+```
+
+3. Extend `__test__`: `{ runSystemTransform, runCompacting, runEvent, POINTER }`.
+4. Add to `SmolPlugin` return:
+
+```ts
+event: async (input) => {
+  await runEvent({ projectRoot }, input as { event: { type: string } })
+},
+```
+
+- [ ] **Step 4: Update Task 7's existing test.**
+
+The `'creates wiki files on first call, idempotent on second'` test in `tests/plugin.hook.test.ts` is now obsolete — wiki bootstrap moved to event hook. Replace that `it(...)` block with one that asserts `runSystemTransform` does NOT create `.smol/wiki/`:
+
+```ts
+it('does not create wiki files (handled by event hook)', async () => {
+  const output = { system: [] as string[] }
+  await runSystemTransform({ projectRoot: dir }, output)
+  expect(existsSync(join(dir, '.smol/wiki'))).toBe(false)
+})
+```
+
+- [ ] **Step 5: Run all tests, expect pass.**
+
+- [ ] **Step 6: Commit.**
+
+```bash
+git add plugin.ts tests/plugin.event.test.ts tests/plugin.hook.test.ts
+git commit -m "refactor(plugin): move wiki bootstrap to event hook"
+```
+
+---
+
 ## Done criteria
 
-- `npm test` is green (≥17 unit tests across codemap + plugin hook).
+- `npm test` is green (≥22 unit tests across codemap + plugin + tools).
 - All 6 slash commands visible in opencode after install.
 - Conductor is the primary agent.
-- Session start creates `.smol/wiki/` and injects the pointer once.
+- Session start creates `.smol/wiki/` (via event hook) and injects the pointer once.
+- Compaction injects codemap head + latest plan into context.
+- Native tools `smol_codemap`, `smol_wiki`, `smol_plan` callable from agents.
 - `/smol-map` produces a working codemap of a sample project.
 - `/smol-fast` runs end-to-end on a sample project.
 - README documents install + quick start.
