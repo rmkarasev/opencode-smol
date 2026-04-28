@@ -216,4 +216,7 @@ export const SmolPlugin: Plugin = async (context) => {
   }
 }
 
-export default SmolPlugin
+export default {
+  id: 'opencode-smol',
+  server: SmolPlugin,
+}
