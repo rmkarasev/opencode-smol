@@ -141,9 +141,9 @@ For tiny changes, skip planning:
 
 ## Per-agent model config
 
-Create `.smol/smol.json` to override the model (and variant) used by
-each smol agent. Both new agents (`conductor`, `planner`) and the
-built-in opencode keys are supported.
+Every smol agent ships with a free default: **`opencode/big-pickle`**, so
+the plugin works out of the box even without a paid subscription. To
+override per agent, create `.smol/smol.json`:
 
 ```json
 {

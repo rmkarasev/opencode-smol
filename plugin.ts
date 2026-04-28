@@ -91,6 +91,9 @@ async function buildAgentConfig(
     description: doc.meta.description ?? `smol ${smolName}`,
     mode: defaultMode,
     prompt: doc.prompt,
+    // Free default so users without a paid subscription can run smol
+    // out of the box. Overridden by .smol/smol.json when present.
+    model: 'opencode/big-pickle',
   }
   if (doc.meta.tools) base.tools = doc.meta.tools
   return applyOverride(base, override)

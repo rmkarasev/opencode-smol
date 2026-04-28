@@ -93,6 +93,17 @@ describe('runConfig hook', () => {
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 
+  it('defaults every smol agent to opencode/big-pickle (free model)', async () => {
+    const root = tmp()
+    try {
+      const config: any = {}
+      await runConfig({ projectRoot: root }, config)
+      for (const k of ['conductor', 'planner', 'coder', 'reviewer', 'mapper', 'scout']) {
+        expect(config.agent[k].model).toBe('opencode/big-pickle')
+      }
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
   it('handles malformed smol.json gracefully', async () => {
     const root = tmp()
     try {
