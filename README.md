@@ -18,18 +18,22 @@
 
 ```bash
 npm install -D smol
-npx smol install      # copies bundled agents/skills into .opencode/
+npx smol install      # copies bundled agents/skills/commands into .opencode/
 ```
 
-Then add to your opencode config (`opencode.json` or `~/.config/opencode/config.json`):
+To upgrade after `npm update smol`:
+
+```bash
+npx smol update       # overwrites previous copies (safe, idempotent)
+```
+
+The plugin auto-loads via the generated `.opencode/plugin/smol.ts` shim — no
+config edits required. If you prefer manual loading, drop this into
+`opencode.json`:
 
 ```json
-{
-  "plugins": ["smol"]
-}
+{ "plugins": ["smol"] }
 ```
-
-`npx smol install` is a one-time post-install step that copies the agent and skill markdown files into your project's `.opencode/{agent,skills}/` so opencode auto-discovers them. Re-run it after upgrading the package.
 
 ## Quick start
 

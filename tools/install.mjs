@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-/* smol install — copies bundled agents and skills into the consumer project's
-   .opencode/{agent,skills} so opencode auto-discovers them. Idempotent. */
+/* smol — copies bundled agents, skills, and commands into the consumer's
+   .opencode/ (or root with --profile). Subcommands: install | update.
+   Idempotent. update overwrites; install skips plugin shim if it exists. */
 import { readdir, mkdir, copyFile, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,13 +13,11 @@ async function exists(p) {
   try { await stat(p); return true } catch { return false }
 }
 
-async function copyAgents(root) {
-  const src = join(PKG_ROOT, 'agents')
-  if (!(await exists(src))) return 0
-  const dest = join(root, 'agent')
-  await mkdir(dest, { recursive: true })
-  const files = (await readdir(src)).filter((f) => f.endsWith('.md'))
-  for (const f of files) await copyFile(join(src, f), join(dest, f))
+async function copyFlat(srcDir, destDir) {
+  if (!(await exists(srcDir))) return 0
+  await mkdir(destDir, { recursive: true })
+  const files = (await readdir(srcDir)).filter((f) => f.endsWith('.md'))
+  for (const f of files) await copyFile(join(srcDir, f), join(destDir, f))
   return files.length
 }
 
@@ -39,31 +38,35 @@ async function copySkills(root) {
   return count
 }
 
-function parseArgs(argv) {
-  const args = argv.slice(2).filter((a) => a !== 'install')
-  const profile = args.includes('--profile')
-  const target = args.find((a) => !a.startsWith('--'))
-  return { target, profile }
-}
-
-async function writePluginShim(root) {
+async function writePluginShim(root, force) {
   const dir = join(root, 'plugin')
   await mkdir(dir, { recursive: true })
   const file = join(dir, 'smol.ts')
-  if (await exists(file)) return false
+  if (!force && (await exists(file))) return false
   await writeFile(file, `export { SmolPlugin as default } from 'smol/plugin'\n`)
   return true
 }
 
+function parseArgs(argv) {
+  const rest = argv.slice(2)
+  const cmd = rest[0] === 'update' ? 'update' : 'install'
+  const args = rest.filter((a, i) => !(i === 0 && (a === 'install' || a === 'update')))
+  const profile = args.includes('--profile')
+  const target = args.find((a) => !a.startsWith('--'))
+  return { cmd, target, profile }
+}
+
 async function main() {
-  const { target, profile } = parseArgs(process.argv)
+  const { cmd, target, profile } = parseArgs(process.argv)
   const base = target ? resolve(target) : process.cwd()
   const root = profile ? base : join(base, '.opencode')
-  const agents = await copyAgents(root)
+  const agents = await copyFlat(join(PKG_ROOT, 'agents'), join(root, 'agent'))
   const skills = await copySkills(root)
-  const shim = await writePluginShim(root)
+  const commands = await copyFlat(join(PKG_ROOT, 'commands'), join(root, 'command'))
+  const shim = await writePluginShim(root, cmd === 'update')
+  const verb = cmd === 'update' ? 'updated' : 'installed'
   console.log(
-    `smol installed: ${agents} agent(s), ${skills} skill(s)${shim ? ', plugin shim' : ''} → ${root}`,
+    `smol ${verb}: ${agents} agent(s), ${skills} skill(s), ${commands} command(s)${shim ? ', plugin shim' : ''} → ${root}`,
   )
 }
 
