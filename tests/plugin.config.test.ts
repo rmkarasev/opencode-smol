@@ -11,15 +11,20 @@ function tmp(): string {
 }
 
 describe('runConfig hook', () => {
-  it('replaces build with conductor (primary) and plan with planner (primary)', async () => {
+  it('adds conductor + planner as primary agents and demotes build/plan', async () => {
     const root = tmp()
     try {
-      const config: any = {}
+      const config: any = { agent: { build: { prompt: 'orig-build' }, plan: { prompt: 'orig-plan' } } }
       await runConfig({ projectRoot: root }, config)
-      expect(config.agent.build.mode).toBe('primary')
-      expect(config.agent.build.prompt).toContain('Conductor')
-      expect(config.agent.plan.mode).toBe('primary')
-      expect(config.agent.plan.prompt).toContain('Planner')
+      expect(config.agent.conductor.mode).toBe('primary')
+      expect(config.agent.conductor.prompt).toContain('Conductor')
+      expect(config.agent.planner.mode).toBe('primary')
+      expect(config.agent.planner.prompt).toContain('Planner')
+      expect(config.agent.build.mode).toBe('subagent')
+      expect(config.agent.build.hidden).toBe(true)
+      expect(config.agent.plan.mode).toBe('subagent')
+      expect(config.agent.plan.hidden).toBe(true)
+      expect(config.default_agent).toBe('conductor')
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 
@@ -47,8 +52,8 @@ describe('runConfig hook', () => {
       }))
       const config: any = {}
       await runConfig({ projectRoot: root }, config)
-      expect(config.agent.build.model).toBe('anthropic/claude-sonnet-4-5')
-      expect(config.agent.build.variant).toBe('high')
+      expect(config.agent.conductor.model).toBe('anthropic/claude-sonnet-4-5')
+      expect(config.agent.conductor.variant).toBe('high')
       expect(config.agent.coder.model).toBe('openai/gpt-5-codex')
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
@@ -62,17 +67,26 @@ describe('runConfig hook', () => {
       }))
       const config: any = {}
       await runConfig({ projectRoot: root }, config)
-      expect(config.agent.plan.model).toBe('openai/gpt-5-mini')
+      expect(config.agent.planner.model).toBe('openai/gpt-5-mini')
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 
-  it('preserves existing agent entries from base config', async () => {
+  it('preserves existing custom agent entries', async () => {
     const root = tmp()
     try {
       const config: any = { agent: { custom: { mode: 'subagent', prompt: 'x' } } }
       await runConfig({ projectRoot: root }, config)
       expect(config.agent.custom).toBeTruthy()
-      expect(config.agent.build).toBeTruthy()
+      expect(config.agent.conductor).toBeTruthy()
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  it('respects user-set default_agent', async () => {
+    const root = tmp()
+    try {
+      const config: any = { default_agent: 'mycustom' }
+      await runConfig({ projectRoot: root }, config)
+      expect(config.default_agent).toBe('mycustom')
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 
@@ -83,7 +97,7 @@ describe('runConfig hook', () => {
       writeFileSync(join(root, '.smol', 'smol.json'), '{ not json')
       const config: any = {}
       await expect(runConfig({ projectRoot: root }, config)).resolves.toBeUndefined()
-      expect(config.agent.build).toBeTruthy()
+      expect(config.agent.conductor).toBeTruthy()
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 })

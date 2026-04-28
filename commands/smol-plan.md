@@ -1,6 +1,6 @@
 ---
 description: Brainstorm + atomize a plan into .smol/plans/
-agent: plan
+agent: planner
 ---
 
 Use the `smol-plan` skill to brainstorm the request below, then write the
