@@ -85,11 +85,7 @@ so re-runs only touch changed folders.
 
 ## Install
 
-```bash
-npm install -D opencode-smol
-```
-
-Then add to `opencode.json` (or `opencode.jsonc`) at your project root or in `~/.config/opencode/`:
+Add to your `opencode.json` (project root or `~/.config/opencode/`):
 
 ```json
 {
@@ -98,34 +94,7 @@ Then add to `opencode.json` (or `opencode.jsonc`) at your project root or in `~/
 }
 ```
 
-That is it. Restart opencode and the 6 commands, 6 agents, skills, tools and hooks are all live. There is no CLI to run, no files to copy.
-
-To upgrade:
-
-```bash
-npm update opencode-smol
-```
-
-### Using with [`ocx`](https://github.com/kdcokenny/ocx) profiles
-
-Create a profile that has `opencode-smol` as a regular npm dependency:
-
-```bash
-mkdir -p ~/.config/opencode/profiles/smol && cd $_
-npm init -y
-npm install opencode-smol
-```
-
-Add `opencode.jsonc` in the same directory:
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-smol"]
-}
-```
-
-Then launch with `ocx --profile smol`.
+Restart opencode. The 6 commands, 6 agents, skills, tools and hooks are all live. No CLI, no file copying, no config edits beyond the line above.
 
 ---
 
