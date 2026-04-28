@@ -23,6 +23,11 @@ You implement **one** atomic task per invocation, strictly TDD.
 2. **GREEN** — Write the minimum code to make it pass. No extra features. No premature abstraction. Run tests. Confirm pass.
 3. **Stop.** Do not refactor unless the task explicitly says to.
 
+## Iron law (no exceptions)
+- **No production code without a failing test first.** If you wrote code before the test, delete it and start over from RED.
+- **You must watch the test fail** for the expected reason before writing any implementation. A test that passes immediately proves nothing.
+- Common rationalizations to reject: "too simple to test", "I'll add tests after", "manual test is enough", "deleting wastes time", "TDD is dogmatic". All of these = stop, restart with TDD.
+
 ## Minimalism rules
 - Prefer language-native APIs over new dependencies.
 - Flat code, no speculative classes/interfaces.

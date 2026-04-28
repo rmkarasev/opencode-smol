@@ -55,6 +55,14 @@ Each task must be:
 - Independently verifiable.
 - If you can't describe the test, the task isn't atomic enough — split it.
 
+## Self-review (MANDATORY before saving)
+After drafting the plan, re-read it and check:
+1. **Coverage** — every requirement / success criterion has at least one task.
+2. **No placeholders** — no "TBD", "etc.", "handle edge cases", "similar to T1". Each task is concrete.
+3. **Naming consistency** — function / file names referenced in T2+ match what T1 introduces.
+4. **Atomicity** — every task names the test it will write.
+Fix issues inline, then save. Do not save a plan that fails this check.
+
 ## Hard rules
 - Never write production code. You write the plan only.
 - No speculative tasks ("we may also want to..."). YAGNI.

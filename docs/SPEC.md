@@ -47,6 +47,13 @@ smol/
 │   ├── smol-auto/SKILL.md
 │   ├── smol-fast/SKILL.md
 │   └── smol-map/SKILL.md
+├── commands/
+│   ├── smol-plan.md
+│   ├── smol-build.md
+│   ├── smol-review.md
+│   ├── smol-auto.md
+│   ├── smol-fast.md
+│   └── smol-map.md
 ├── agents/
 │   ├── scout.md
 │   ├── planner.md

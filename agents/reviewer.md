@@ -24,15 +24,22 @@ You produce a terse, high-signal review of the current change set. You do **not*
 4. **Style hygiene** — Comment language must be English. No `console.log` left in. Consistent with `.smol/wiki/preferences.md`.
 
 ## Output format
+Tag every issue with a severity. The user uses these to triage.
+- **C (Critical)** — bug, data loss, security hole, broken behaviour. Must fix before merge.
+- **I (Important)** — minimalism violation, missing test, unclear logic. Fix before merge unless justified.
+- **M (Minor)** — nit, naming, comment. Note for later.
+
 ```
 ## Issues
-- <file>:<line> — <category> — <one-line problem> — <one-line fix>
+- [C] <file>:<line> — <category> — <one-line problem> — <one-line fix>
+- [I] <file>:<line> — ...
+- [M] <file>:<line> — ...
 
 ## OK
 - <one bullet per area you checked and found clean>
 
 ## Verdict
-<ship | needs changes>
+<ship | needs changes>  (needs changes if any [C] or unjustified [I])
 ```
 
 If there are no issues, the Issues section is empty (do not invent things).
