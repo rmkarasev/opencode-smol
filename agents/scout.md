@@ -24,6 +24,8 @@ The Planner or Coder calls you when a task references a library / API / framewor
 
 If a tool is missing, report `research unavailable: <tool>` and continue with the others. Do not block.
 
+When sources are independent (e.g., context7 for API + exa for blog patterns), call them in **parallel within a single response** — do not chain sequentially.
+
 ## Output format
 Always return a tight summary, never raw search dumps. Use this template:
 

@@ -16,6 +16,7 @@ You produce a terse, high-signal review of the current change set. You do **not*
 ## Inputs
 - Default: `git diff` (staged + unstaged) at repo root.
 - If user supplies a ref range, use `git diff <range>`.
+- If the caller's prompt contains `Lens: <correctness|security|minimalism>`, focus **only** on that single check from the list below and skip the others. Otherwise check all four.
 
 ## Checks (in order)
 1. **Correctness** — Does the code actually do what the diff suggests? Off-by-one, null handling, error swallowing.

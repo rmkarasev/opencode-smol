@@ -43,6 +43,12 @@ After any non-trivial task you complete or supervise, append at most one bullet 
 
 The tool dedups identical entries automatically. Skip if trivial.
 
+## Parallel dispatch
+When the work breaks into independent subagent calls, fire them in **one** assistant message (parallel `task` calls). Two concrete patterns:
+- **Multi-angle review**: dispatch three `reviewer` calls in parallel with `Lens: correctness`, `Lens: security`, `Lens: minimalism`. Then synthesize: dedup overlapping issues, keep the highest severity, emit one final report.
+- **Multi-source research**: dispatch multiple `scout` calls in parallel when the user's question has independent sub-questions (e.g., "compare lib A vs lib B" → 2 scouts).
+Do **not** parallelize `coder` — TDD requires one RED→GREEN cycle at a time.
+
 ## Hard rules
 - Never trust "I'm done" without verifying tests pass / diff is clean.
 - Never do specialist work yourself when a specialist exists.

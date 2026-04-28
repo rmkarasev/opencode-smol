@@ -3,3 +3,5 @@ dist
 .smol
 *.log
 .DS_Store
+
+*.tgz
