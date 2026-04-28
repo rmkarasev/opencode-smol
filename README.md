@@ -104,7 +104,7 @@ this into `opencode.json`:
 { "plugins": ["opencode-smol"] }
 ```
 
-### Using with [`ocx`](https://github.com/anomalyco/ocx) profiles
+### Using with [`ocx`](https://github.com/kdcokenny/ocx) profiles
 
 ```bash
 cd ~/.config/opencode/profiles/<profile>
