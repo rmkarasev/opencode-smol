@@ -116,8 +116,8 @@ async function runConfig(
   for (const name of ['coder', 'reviewer', 'mapper', 'scout'] as const) {
     config.agent[name] = await buildAgentConfig(name, 'subagent', overrides[name])
   }
-  // Demote built-ins so Conductor/Planner own the primary slots.
-  config.agent.build = demote(config.agent.build)
+  // Demote built-in plan so Planner owns the plan slot. Keep build visible
+  // so users can still switch to opencode's default build agent if desired.
   config.agent.plan = demote(config.agent.plan)
   // Make Conductor the default unless the user explicitly set one.
   if (!config.default_agent) config.default_agent = 'conductor'

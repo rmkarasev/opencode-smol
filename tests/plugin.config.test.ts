@@ -11,7 +11,7 @@ function tmp(): string {
 }
 
 describe('runConfig hook', () => {
-  it('adds conductor + planner as primary agents and demotes build/plan', async () => {
+  it('keeps build visible, demotes plan, makes conductor default', async () => {
     const root = tmp()
     try {
       const config: any = { agent: { build: { prompt: 'orig-build' }, plan: { prompt: 'orig-plan' } } }
@@ -20,8 +20,11 @@ describe('runConfig hook', () => {
       expect(config.agent.conductor.prompt).toContain('Conductor')
       expect(config.agent.planner.mode).toBe('primary')
       expect(config.agent.planner.prompt).toContain('Planner')
-      expect(config.agent.build.mode).toBe('subagent')
-      expect(config.agent.build.hidden).toBe(true)
+      // build stays as-is (untouched)
+      expect(config.agent.build.mode).toBeUndefined()
+      expect(config.agent.build.hidden).toBeUndefined()
+      expect(config.agent.build.prompt).toBe('orig-build')
+      // plan is demoted
       expect(config.agent.plan.mode).toBe('subagent')
       expect(config.agent.plan.hidden).toBe(true)
       expect(config.default_agent).toBe('conductor')
