@@ -1,0 +1,109 @@
+import type { Plugin } from '@opencode-ai/plugin'
+import { mkdir, writeFile, readFile, access, readdir } from 'node:fs/promises'
+import { join } from 'node:path'
+
+const POINTER =
+  '<smol>Check .smol/codemap.md and .smol/wiki/{memory,preferences,pitfalls}.md when relevant. ' +
+  'Append new insights to wiki via the smol_wiki tool (append-only, dated, English, ≤200 chars per entry).</smol>'
+
+const WIKI_FILES: Record<string, string> = {
+  'memory.md':
+    '# memory\n\n<!-- Project conventions, naming, recurring patterns. Append-only, dated. -->\n',
+  'preferences.md':
+    '# preferences\n\n<!-- User coding style and explicit preferences. Append-only, dated. -->\n',
+  'pitfalls.md':
+    '# pitfalls\n\n<!-- Gotchas, dead-ends, things that bit us. Append-only, dated. -->\n',
+}
+
+const MAX_BYTES = 2048
+
+async function exists(p: string): Promise<boolean> {
+  try {
+    await access(p)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function ensureWiki(projectRoot: string): Promise<void> {
+  const wikiDir = join(projectRoot, '.smol', 'wiki')
+  await mkdir(wikiDir, { recursive: true })
+  for (const [name, contents] of Object.entries(WIKI_FILES)) {
+    const target = join(wikiDir, name)
+    if (!(await exists(target))) await writeFile(target, contents)
+  }
+}
+
+async function runSystemTransform(
+  _ctx: { projectRoot: string },
+  output: { system: string[] },
+): Promise<void> {
+  output.system.push(POINTER)
+}
+
+async function readHead(path: string): Promise<string | null> {
+  if (!(await exists(path))) return null
+  const txt = await readFile(path, 'utf8')
+  return txt.length > MAX_BYTES ? txt.slice(0, MAX_BYTES) + '\n…[truncated]' : txt
+}
+
+async function latestPlan(projectRoot: string): Promise<string | null> {
+  const plansDir = join(projectRoot, '.smol/plans')
+  if (!(await exists(plansDir))) return null
+  const entries = await readdir(plansDir)
+  const md = entries.filter((n) => n.endsWith('.md')).sort()
+  if (md.length === 0) return null
+  return readHead(join(plansDir, md[md.length - 1]))
+}
+
+async function runCompacting(
+  ctx: { projectRoot: string },
+  output: { context: string[]; prompt?: string },
+): Promise<void> {
+  const codemap = await readHead(join(ctx.projectRoot, '.smol/codemap.md'))
+  if (codemap) output.context.push(`# .smol/codemap.md (head)\n${codemap}`)
+  const plan = await latestPlan(ctx.projectRoot)
+  if (plan) output.context.push(`# .smol/plans/<latest>\n${plan}`)
+}
+
+async function runEvent(
+  ctx: { projectRoot: string },
+  input: { event?: { type?: string } },
+): Promise<void> {
+  if (input?.event?.type === 'session.created') {
+    await ensureWiki(ctx.projectRoot)
+  }
+}
+
+export const __test__ = {
+  runSystemTransform,
+  runCompacting,
+  runEvent,
+  ensureWiki,
+  POINTER,
+}
+
+export const SmolPlugin: Plugin = async (context) => {
+  const projectRoot =
+    (context as { directory?: string }).directory ?? process.cwd()
+  return {
+    'experimental.chat.system.transform': async (_input, output) => {
+      await runSystemTransform(
+        { projectRoot },
+        output as { system: string[] },
+      )
+    },
+    'experimental.session.compacting': async (_input, output) => {
+      await runCompacting(
+        { projectRoot },
+        output as { context: string[]; prompt?: string },
+      )
+    },
+    event: async (input) => {
+      await runEvent({ projectRoot }, input as { event?: { type?: string } })
+    },
+  }
+}
+
+export default SmolPlugin
