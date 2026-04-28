@@ -1,6 +1,7 @@
 import type { Plugin } from '@opencode-ai/plugin'
 import { mkdir, writeFile, readFile, access, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { smolCodemapTool, smolWikiTool, smolPlanTool } from './tools/plugin-tools'
 
 const POINTER =
   '<smol>Check .smol/codemap.md and .smol/wiki/{memory,preferences,pitfalls}.md when relevant. ' +
@@ -102,6 +103,11 @@ export const SmolPlugin: Plugin = async (context) => {
     },
     event: async (input) => {
       await runEvent({ projectRoot }, input as { event?: { type?: string } })
+    },
+    tool: {
+      smol_codemap: smolCodemapTool,
+      smol_wiki: smolWikiTool,
+      smol_plan: smolPlanTool,
     },
   }
 }
