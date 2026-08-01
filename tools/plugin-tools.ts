@@ -19,6 +19,16 @@ function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+function datetimeLocal(): string {
+  const d = new Date()
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}-${hh}${min}`
+}
+
 function slugify(s: string): string {
   return s
     .toLowerCase()
@@ -58,7 +68,7 @@ async function runPlan(
   ctx: { directory: string },
 ): Promise<string> {
   const slug = slugify(args.topic)
-  const name = `${today()}-${slug}.md`
+  const name = `${datetimeLocal()}-${slug}.md`
   await mkdir(join(ctx.directory, '.smol/plans'), { recursive: true })
   await writeFile(join(ctx.directory, '.smol/plans', name), args.content)
   return `plan saved: .smol/plans/${name}`
@@ -88,7 +98,7 @@ export const smolWikiTool = tool({
 })
 
 export const smolPlanTool = tool({
-  description: 'Save a markdown plan under .smol/plans/YYYY-MM-DD-<slug>.md.',
+  description: 'Save a markdown plan under .smol/plans/YYYY-MM-DD-HHMM-<slug>.md.',
   args: {
     topic: z.string().min(1).max(80),
     content: z.string().min(1),

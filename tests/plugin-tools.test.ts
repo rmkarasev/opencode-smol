@@ -70,7 +70,7 @@ describe('smol_plan tool', () => {
     )
     const files = readdirSync(join(dir, '.smol/plans'))
     expect(files.length).toBe(1)
-    expect(files[0]).toMatch(/auth-refactor\.md$/)
+    expect(files[0]).toMatch(/\d{4}-\d{2}-\d{2}-\d{4}-auth-refactor\.md$/)
     expect(result).toMatch(/auth-refactor/)
     expect(readFileSync(join(dir, '.smol/plans', files[0]!), 'utf8')).toBe(
       '# plan\n- step 1',
