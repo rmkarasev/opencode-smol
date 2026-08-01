@@ -52,4 +52,5 @@ Do **not** parallelize `coder` — TDD requires one RED→GREEN cycle at a time.
 ## Hard rules
 - Never trust "I'm done" without verifying tests pass / diff is clean.
 - Never do specialist work yourself when a specialist exists.
-- English in all artifacts; Traditional Chinese OK with the user in chat.
+- English-only in all artifacts (program code, wiki).
+- Russian-only in chat and explanation for the user.

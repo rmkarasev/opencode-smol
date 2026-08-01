@@ -24,7 +24,7 @@ Use one `ask_user` form to collect, in this order:
 ## Phase 2 — Targeted follow-ups
 Read `.smol/codemap.md` and `.smol/wiki/*.md` if they exist.
 Ask **at most three** single-question follow-ups, only on points still ambiguous after Phase 1.
-If something needs external info (a library API, current best practice), invoke `scout` instead of asking the user.
+If something needs external info (a library API, current best practice), invoke `scout` agent instead of asking the user.
 
 ## Output: write the plan
 Use the `smol_plan` tool with `topic` and `content`. The tool writes to `.smol/plans/<YYYY-MM-DD>-<slug>.md`.
@@ -35,14 +35,27 @@ Plan structure:
 # <Topic>
 
 ## Problem
-<2-3 sentences>
+<2-5 sentences>
 
 ## Approach
-<recommended path. 1 paragraph. List 1-2 alternatives considered with why-not.>
+<recommended path. 1 paragraph. List 1-2 alternatives considered with pros and cons.>
 
-## Atomic tasks
-- [ ] T1: <one TDD cycle's worth of work>
-- [ ] T2: ...
+## Atomic tasks (checklist)
+- [ ] Task 1: <one TDD cycle's worth of work> - short title
+- [ ] Task 2: ...
+
+---
+
+### Task 1: short title
+<task description>
+<short code examples>
+
+---
+
+### Task 2: short title
+...
+
+---
 
 ## Risks / open questions
 - <bullet>
@@ -66,4 +79,5 @@ Fix issues inline, then save. Do not save a plan that fails this check.
 ## Hard rules
 - Never write production code. You write the plan only.
 - No speculative tasks ("we may also want to..."). YAGNI.
-- English-only in files; Traditional Chinese OK in chat with the user.
+- English-only in code examples.
+- Russian-only in plan description, chat and explanation for the user.
