@@ -106,11 +106,14 @@ async function buildAgentConfig(
   smolName: string,
   defaultMode: 'primary' | 'subagent',
   override: AgentOverride | undefined,
+  agentRoot?: string,
 ): Promise<Record<string, unknown>> {
-  const doc = await loadAgent(smolName)
+  const doc = agentRoot
+    ? await loadAgent(smolName, agentRoot)
+    : await loadAgent(smolName)
   const base: Record<string, unknown> = {
     description: doc.meta.description ?? `smol ${smolName}`,
-    mode: defaultMode,
+    mode: doc.meta.mode ?? defaultMode,
     prompt: doc.prompt,
     // Free default so users without a paid subscription can run smol
     // out of the box. Overridden by .smol/smol.json when present.
@@ -128,7 +131,7 @@ function demote(existing: Record<string, unknown> | undefined): Record<string, u
 }
 
 async function runConfig(
-  ctx: { projectRoot: string },
+  ctx: { projectRoot: string; agentRoot?: string },
   config: {
     agent?: AgentMap
     command?: CommandMap
@@ -140,10 +143,10 @@ async function runConfig(
   const overrides = smol.agents ?? {}
   config.agent = config.agent ?? {}
   // Register smol agents under their own keys (do not overwrite build/plan).
-  config.agent.conductor = await buildAgentConfig('conductor', 'primary', overrides.conductor)
-  config.agent.planner = await buildAgentConfig('planner', 'primary', overrides.planner)
+  config.agent.conductor = await buildAgentConfig('conductor', 'primary', overrides.conductor, ctx.agentRoot)
+  config.agent.planner = await buildAgentConfig('planner', 'primary', overrides.planner, ctx.agentRoot)
   for (const name of ['coder', 'reviewer', 'mapper', 'scout'] as const) {
-    config.agent[name] = await buildAgentConfig(name, 'subagent', overrides[name])
+    config.agent[name] = await buildAgentConfig(name, 'subagent', overrides[name], ctx.agentRoot)
   }
   // Demote built-in plan so Planner owns the plan slot. Keep build visible
   // so users can still switch to opencode's default build agent if desired.
