@@ -14,3 +14,9 @@ Steps:
 6. Report which task ran, files changed, test result.
 
 If no plan exists, tell the user to run `/smol-plan` first or use `/smol-fast`.
+
+If user explicitly ask to implement all tasks in the plan at once,
+execute all tasks one by one in order, using strict RED → GREEN TDD for each atomic task.
+
+If user explicitly ask to implement all tasks in the plan at once,
+the `coder` agent will execute all tasks one by one in order, using strict RED → GREEN TDD for each atomic task.
