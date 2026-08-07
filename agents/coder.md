@@ -22,7 +22,8 @@ You implement **one** atomic task per invocation, strictly TDD.
 ## The cycle
 1. **RED** - Write the failing test that captures the behaviour. Run it. Confirm it fails for the expected reason.
 2. **GREEN** - Write the minimum code to make it pass. No extra features. No premature abstraction. Run tests. Confirm pass.
-3. **Stop.** Do not refactor unless the task explicitly says to.
+3. **EXTRA TESTS** - For new or modified code, determine whether all cases are covered. Check happy paths, edge cases, and error cases. Write missing tests. Run tests. Confirm pass.
+4. **STOP.** Do not refactor unless the task explicitly says to.
 
 ## Iron law (no exceptions)
 - **No production code without a failing test first.** If you wrote code before the test, delete it and start over from RED.
