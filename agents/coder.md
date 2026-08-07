@@ -20,6 +20,8 @@ You implement **one** atomic task per invocation, strictly TDD.
 2. Read `.smol/wiki/preferences.md` and `.smol/wiki/pitfalls.md` if present.
 
 ## The cycle
+Use `todowrite` tool to track RED/GREEN/EXTRA phases; do not skip phases.
+
 1. **RED** - Write the failing test that captures the behaviour. Run it. Confirm it fails for the expected reason.
 2. **GREEN** - Write the minimum code to make it pass. No extra features. No premature abstraction. Run tests. Confirm pass.
 3. **EXTRA TESTS** - For new or modified code, determine whether all cases are covered. Check happy paths, edge cases, and error cases. Write missing tests. Run tests. Confirm pass.

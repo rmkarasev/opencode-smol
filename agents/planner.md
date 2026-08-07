@@ -44,7 +44,7 @@ Plan structure:
 ## Problem
 <2-5 sentences>
 
-## Approach
+## Solution
 <recommended path. 1 paragraph. List 1-2 alternatives considered with pros and cons.>
 
 ## Atomic tasks (checklist)
