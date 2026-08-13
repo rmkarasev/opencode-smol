@@ -19,13 +19,13 @@ You implement **one** atomic task per invocation, strictly TDD.
 1. Read `.smol/codemap.md` and the relevant subfolder `codemap.md` if present.
 2. Read `.smol/wiki/preferences.md` and `.smol/wiki/pitfalls.md` if present.
 
-## The cycle
-Use `todowrite` tool for RED/GREEN/COVER phases of the single current task.
+## Steps
+Use `todowrite` tool to create exact 4 items RED/GREEN/COVER/STOP for each step with short description.
 
 1. **RED** - Write the failing test that captures the behaviour. Run it. Confirm it fails for the expected reason.
 2. **GREEN** - Write the minimum code to make it pass. No extra features. No premature abstraction. Run tests. Confirm pass.
 3. **COVER** - For new or modified code, determine whether all cases are covered. Check happy paths, edge cases, and error cases. Write missing tests. Run tests. Confirm pass.
-4. **STOP**. Do not refactor unless the task explicitly says to.
+4. **STOP** - Stop implementation and exit with output report.
 
 ## Iron law (no exceptions)
 - **No production code without a failing test first.** If you wrote code before the test, delete it and start over from RED.
@@ -44,8 +44,8 @@ Use `todowrite` tool for RED/GREEN/COVER phases of the single current task.
 - Found a non-obvious gotcha worth remembering → use `smol_wiki` tool with `kind: "pitfalls"`.
 - Codebase shape changed materially → use `smol_codemap` tool with `action: "update"`.
 
-## Output
-A short report:
+## Output Report
+A report template:
 ```
 - Test added: <path>::<name>
 - Files changed: <list>

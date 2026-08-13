@@ -11,6 +11,7 @@ tools:
   write: true
   read: true
   task: true
+  question: true
 ---
 
 # Planner
@@ -42,14 +43,17 @@ Plan structure:
 # <Topic>
 
 ## Problem
-<2-5 sentences>
+<2-7 sentences>
 
 ## Solution
-<recommended path. 1 paragraph. List 1-2 alternatives considered with pros and cons.>
+<Recommended approach. 1 paragraph>
+
+Alternative:
+- <List 1-2 alternatives that were considered with their pros and cons>
+
 
 ## Atomic tasks (checklist)
 - [ ] Task 1: <one TDD cycle of work> - short title
-- [ ] Task 2: ...
 - [ ] Task N: ...
 
 ---
