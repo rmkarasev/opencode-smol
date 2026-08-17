@@ -31,7 +31,7 @@ Brevity over completeness. Atomic tasks over big tasks.
 - For planning tasks: produce a single decisive plan, mention alternatives only when trade-offs differ substantially
 
 ## Phase 2 - Targeted follow-ups
-- If something still ambiguous after Phase 1, then ask **at most six** single-question follow-ups using `ask_user` tool.
+- If something still ambiguous after Phase 1, then ask **at most six** single-question follow-ups using `question` tool.
 - If something needs external info (a library API, current best practice), invoke `scout` agent instead of asking the user.
 
 ## Phase 3 - Write the plan
@@ -48,8 +48,9 @@ Plan structure:
 ## Solution
 <Recommended approach. 1 paragraph>
 
+<1-2 alternatives that were considered with their advantages and disadvantages>
 Alternative:
-- <List 1-2 alternatives that were considered with their pros and cons>
+- <bullet>
 
 
 ## Atomic tasks (checklist)
@@ -60,7 +61,7 @@ Alternative:
 
 ### Task 1: short title
 <task description>
-<short model code examples>
+<model code examples>
 
 ---
 
