@@ -98,7 +98,7 @@ export const smolWikiTool = tool({
 })
 
 export const smolPlanTool = tool({
-  description: 'Save a markdown plan under .smol/plans/YYYY-MM-DD-HHMM-<slug>.md.',
+  description: 'Save a markdown plan under .smol/plans/YYYY-MM-DD-HHmm-<slug>.md.',
   args: {
     topic: z.string().min(1).max(80),
     content: z.string().min(1),
