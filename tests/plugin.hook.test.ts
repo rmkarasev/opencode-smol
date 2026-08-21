@@ -18,7 +18,7 @@ describe('session-start system transform', () => {
     await runSystemTransform({ projectRoot: dir }, output)
     expect(output.system.length).toBe(1)
     expect(output.system[0]).toMatch(/<smol>/)
-    expect(output.system[0]).toMatch(/\.smol\/codemap\.md/)
+    expect(output.system[0]).not.toMatch(/codemap/)
     expect(output.system[0]).toMatch(/\.smol\/wiki/)
   })
 

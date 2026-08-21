@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 `smol` is a complete agent workflow in **one tiny package**: planning,
-TDD-enforced coding, multi-lens review, codebase mapping, and persistent
+TDD-enforced coding, multi-lens review, and persistent
 project memory. No bloat, no over-engineering, no monthly token bill
 shock.
 
@@ -34,7 +34,7 @@ plugin is roughly the size of a single superpowers SKILL.
 
 ## What you get
 
-### 6 slash commands
+### 5 slash commands
 
 | Command | What it does |
 | --- | --- |
@@ -43,9 +43,8 @@ plugin is roughly the size of a single superpowers SKILL.
 | `/smol-fast` | One-shot: small change, no plan needed |
 | `/smol-review` | Multi-lens review (correctness + security + minimalism in parallel) |
 | `/smol-auto` | Conductor drives the full plan → code → review pipeline non-stop |
-| `/smol-map` | Build / refresh the per-folder codemap |
 
-### 6 agents
+### 5 agents
 
 | Agent | Role | Mode |
 | --- | --- | --- |
@@ -53,33 +52,25 @@ plugin is roughly the size of a single superpowers SKILL.
 | **Planner** | Stage-based brainstorming → atomic plan. | `primary` (replaces `plan`) |
 | **Coder** | TDD-only. Iron law: no production code without a failing test. | `subagent` |
 | **Reviewer** | Severity-tagged `[C]/[I]/[M]` review. Accepts a `Lens:` for parallel multi-angle review. | `subagent` |
-| **Mapper** | Maintains `.smol/codemap.{json,md}`. | `subagent` |
 | **Scout** | External research via context7 + exa MCP, parallel sources. | `subagent` |
 
 The built-in `build` agent is kept (so you can still use it explicitly);
 the built-in `plan` is hidden because Planner replaces it.
 
-### 3 native tools
+### 2 native tools
 
 Agents prefer these over shell commands — schema-validated, no parsing.
 
 | Tool | Args | Purpose |
 | --- | --- | --- |
-| `smol_codemap` | `action: init \| update \| changes` | Maintain `.smol/codemap.json` and per-folder `codemap.md` |
 | `smol_wiki` | `kind: memory \| preferences \| pitfalls`, `entry: string ≤200` | Append a dated entry, dedups |
 | `smol_plan` | `topic: string`, `content: string` | Write `.smol/plans/YYYY-MM-DD-<slug>.md` |
 
 ### 3 hooks
 
-- **`session.start`** — injects a one-line prompt so the LLM checks `.smol/wiki/` and `.smol/codemap.md` when relevant.
-- **`session.compacting`** — re-injects codemap + latest plan so project memory survives long sessions.
+- **`session.start`** — injects a one-line prompt so the LLM checks `.smol/wiki/` when relevant.
+- **`session.compacting`** — re-injects latest plan so project memory survives long sessions.
 - **`session.created`** — bootstraps `.smol/wiki/` skeleton on first run.
-
-### `codemap` CLI
-
-A standalone incremental code-mapper bundled with the plugin. Runs
-locally, no LLM calls, computes per-folder summaries with content hashes
-so re-runs only touch changed folders.
 
 ---
 
@@ -94,14 +85,13 @@ Add to your `opencode.json` (project root or `~/.config/opencode/`):
 }
 ```
 
-Restart opencode. The 6 commands, 6 agents, skills, tools and hooks are all live. No CLI, no file copying, no config edits beyond the line above.
+Restart opencode. The 5 commands, 5 agents, skills, tools and hooks are all live. No CLI, no file copying, no config edits beyond the line above.
 
 ---
 
 ## Quick start
 
 ```
-/smol-map        # one-time: build codemap of your project
 /smol-plan       # describe what you want to build
 /smol-auto       # let conductor drive plan → code → review
 ```
@@ -149,9 +139,6 @@ A bare string is shorthand for `{ "model": "..." }`. Unknown fields
 
 ```
 .smol/
-├── codemap.json
-├── codemap.md
-├── <subdir>/codemap.md
 ├── plans/YYYY-MM-DD-<topic>.md
 └── wiki/
     ├── memory.md       # patterns and conventions of this project
@@ -195,10 +182,9 @@ zero overlap.
 | | smol | superpowers | gsd | gstack |
 | --- | --- | --- | --- | --- |
 | Total methodology size | ~15 KB | ~150 KB | ~80 KB | ~120 KB |
-| Agents | 6 | 1 (skill-based) | 11+ | 23 |
+| Agents | 5 | 1 (skill-based) | 11+ | 23 |
 | TDD enforced | yes (iron law) | yes (skill) | partial | partial |
 | Persistent project memory | yes (`.smol/wiki`) | no | partial | no |
-| Codemap (token-saving) | yes (`.smol/codemap`) | no | no | no |
 | Per-agent model + variant | yes | n/a | yes (stage) | n/a |
 | Solo-developer fit | ★★★ | ★★ | ★ | ★ |
 
@@ -212,7 +198,7 @@ See [`SPEC.md`](./SPEC.md). Short version:
 - Methodology embedded in agent prompts, not floating skill files.
 - Only the rules that get rationalized away under pressure are
   enforced as "iron laws".
-- Wiki and codemap give the project a memory so the AI does not
+- Wiki gives the project a memory so the AI does not
   re-discover it every session.
 - Stay out of the way otherwise.
 
@@ -225,7 +211,7 @@ npm install
 npm test
 ```
 
-42 tests across codemap, plugin hooks, config, and tools.
+27 tests across plugin hooks, config, and tools.
 
 ---
 

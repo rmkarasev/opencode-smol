@@ -25,7 +25,6 @@
     "tools/agent-loader.ts",
     "tools/plugin-tools.ts",
     "tools/smol-config.ts",
-    "tools/codemap.mjs",
     "README.md",
     "SPEC.md",
     "LICENSE"

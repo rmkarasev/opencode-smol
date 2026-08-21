@@ -1,34 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import {
-  mkdtempSync,
-  readFileSync,
-  existsSync,
-  readdirSync,
-  rmSync,
-  mkdirSync,
-  writeFileSync,
-} from 'node:fs'
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { __test__ } from '../tools/plugin-tools.ts'
 
-const { runCodemap, runWiki, runPlan } = __test__
+const { runWiki, runPlan } = __test__
 
 let dir: string
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'smol-pt-'))
 })
 afterEach(() => rmSync(dir, { recursive: true, force: true }))
-
-describe('smol_codemap tool', () => {
-  it('init creates .smol/codemap.json', async () => {
-    mkdirSync(join(dir, 'src'), { recursive: true })
-    writeFileSync(join(dir, 'src/a.ts'), 'export const a = 1')
-    const result = await runCodemap({ action: 'init' }, { directory: dir })
-    expect(existsSync(join(dir, '.smol/codemap.json'))).toBe(true)
-    expect(typeof result).toBe('string')
-  })
-})
 
 describe('smol_wiki tool', () => {
   it('appends a dated entry', async () => {

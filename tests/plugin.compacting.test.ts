@@ -13,21 +13,21 @@ beforeEach(() => {
 afterEach(() => rmSync(dir, { recursive: true, force: true }))
 
 describe('compacting hook', () => {
-  it('injects codemap head and latest plan into context', async () => {
+  it('injects latest plan into context', async () => {
     mkdirSync(join(dir, '.smol/plans'), { recursive: true })
     writeFileSync(join(dir, '.smol/codemap.md'), '# codemap\nfile a -> b\n'.repeat(50))
     writeFileSync(join(dir, '.smol/plans/2026-04-28-foo.md'), '# plan foo')
     writeFileSync(join(dir, '.smol/plans/2026-04-29-bar.md'), '# plan bar')
     const out: { context: string[]; prompt?: string } = { context: [] }
     await runCompacting({ projectRoot: dir }, out)
-    expect(out.context.length).toBeGreaterThanOrEqual(2)
-    expect(out.context.some((c) => c.includes('codemap'))).toBe(true)
+    expect(out.context.length).toBeGreaterThanOrEqual(1)
     expect(out.context.some((c) => c.includes('plan bar'))).toBe(true)
+    expect(out.context.some((c) => c.includes('codemap'))).toBe(false)
   })
 
-  it('truncates large codemap to MAX_BYTES', async () => {
-    mkdirSync(join(dir, '.smol'), { recursive: true })
-    writeFileSync(join(dir, '.smol/codemap.md'), 'x'.repeat(10_000))
+  it('truncates large plan to MAX_BYTES', async () => {
+    mkdirSync(join(dir, '.smol/plans'), { recursive: true })
+    writeFileSync(join(dir, '.smol/plans/2026-04-29-big.md'), 'x'.repeat(10_000))
     const out: { context: string[]; prompt?: string } = { context: [] }
     await runCompacting({ projectRoot: dir }, out)
     expect(out.context[0]).toMatch(/truncated/)

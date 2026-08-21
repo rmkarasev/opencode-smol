@@ -1,8 +1,6 @@
 import { tool } from '@opencode-ai/plugin/tool'
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
-// @ts-expect-error - .mjs without types
-import { runCli as runCodemapCli } from './codemap.mjs'
 
 const z = tool.schema
 
@@ -38,14 +36,6 @@ function slugify(s: string): string {
     .slice(0, 60)
 }
 
-async function runCodemap(
-  args: { action: 'init' | 'update' | 'changes' },
-  ctx: { directory: string },
-): Promise<string> {
-  const out: string = await runCodemapCli([args.action, '--root', ctx.directory])
-  return out || `codemap ${args.action} done`
-}
-
 async function runWiki(
   args: { kind: 'memory' | 'preferences' | 'pitfalls'; entry: string },
   ctx: { directory: string },
@@ -74,16 +64,7 @@ async function runPlan(
   return `plan saved: .smol/plans/${name}`
 }
 
-export const __test__ = { runCodemap, runWiki, runPlan }
-
-export const smolCodemapTool = tool({
-  description:
-    'Maintain the smol codemap. action=init creates baseline, update writes changed templates, changes lists modified files.',
-  args: { action: z.enum(['init', 'update', 'changes']) },
-  async execute(args, ctx) {
-    return runCodemap(args, { directory: ctx.directory })
-  },
-})
+export const __test__ = { runWiki, runPlan }
 
 export const smolWikiTool = tool({
   description:

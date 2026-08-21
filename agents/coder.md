@@ -33,11 +33,10 @@ Identify the task type by its tag and follow the corresponding steps.
 - Comments in English, only where intent is non-obvious.
 - Touch only files relevant to the task.
 
-## When to call others / tools
-- Need external API / library info → invoke `scout`.
-- Need to know how a foreign module works → read its `codemap.md` first; only fall back to grep if missing.
+## When to call tools / others agents
+- Need external API / library info → invoke `scout` agent.
+- Need to know how a foreign module works → read source files using `grep`, `glob`, `read` tools.
 - Found a non-obvious gotcha worth remembering → use `smol_wiki` tool with `kind: "pitfalls"`.
-- Codebase shape changed materially → use `smol_codemap` tool with `action: "update"`.
 
 ## Output Report
 A report template:

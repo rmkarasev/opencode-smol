@@ -11,7 +11,7 @@ export type SmolJson = {
 
 // smol agent names map 1:1 to opencode agent keys (conductor and planner are
 // new primary agents, not replacements for the built-in build/plan keys).
-export const SMOL_AGENTS = ['conductor', 'planner', 'coder', 'reviewer', 'mapper', 'scout'] as const
+export const SMOL_AGENTS = ['conductor', 'planner', 'coder', 'reviewer', 'scout'] as const
 export type SmolAgentName = typeof SMOL_AGENTS[number]
 
 export async function loadSmolJson(projectRoot: string): Promise<SmolJson> {

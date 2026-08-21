@@ -52,15 +52,6 @@ describe('runConfig hook', () => {
       '# Reviewer',
       'I review.',
     ].join('\n'))
-    writeFileSync(join(agentsDir, 'mapper.md'), [
-      '---',
-      'name: mapper',
-      'description: Maps',
-      'mode: subagent',
-      '---',
-      '# Mapper',
-      'I map.',
-    ].join('\n'))
     writeFileSync(join(agentsDir, 'scout.md'), [
       '---',
       'name: scout',
@@ -83,7 +74,7 @@ describe('runConfig hook', () => {
       expect(config.agent.coder.mode).toBe('all')
       expect(config.agent.coder.prompt).toContain('I code')
       
-      for (const k of ['reviewer', 'mapper', 'scout']) {
+      for (const k of ['reviewer', 'scout']) {
         expect(config.agent[k].mode).toBe('subagent')
         expect(config.agent[k].prompt).toBeTruthy()
       }
@@ -156,18 +147,18 @@ describe('runConfig hook', () => {
     try {
       const config: any = {}
       await runConfig({ projectRoot: root }, config)
-      for (const k of ['conductor', 'planner', 'coder', 'reviewer', 'mapper', 'scout']) {
+      for (const k of ['conductor', 'planner', 'coder', 'reviewer', 'scout']) {
         expect(config.agent[k].model).toBe('opencode/big-pickle')
       }
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 
-  it('registers all 6 slash commands programmatically with template + agent', async () => {
+  it('registers all 5 slash commands programmatically with template + agent', async () => {
     const root = tmp()
     try {
       const config: any = {}
       await runConfig({ projectRoot: root }, config)
-      for (const name of ['smol-plan', 'smol-build', 'smol-review', 'smol-auto', 'smol-fast', 'smol-map']) {
+      for (const name of ['smol-plan', 'smol-build', 'smol-review', 'smol-auto', 'smol-fast']) {
         const cmd = config.command[name]
         expect(cmd, `command ${name} should exist`).toBeTruthy()
         expect(cmd.template).toBeTruthy()

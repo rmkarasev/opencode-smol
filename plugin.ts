@@ -2,7 +2,7 @@ import type { Plugin } from '@opencode-ai/plugin'
 import { mkdir, writeFile, readFile, access, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { smolCodemapTool, smolWikiTool, smolPlanTool } from './tools/plugin-tools'
+import { smolWikiTool, smolPlanTool } from './tools/plugin-tools'
 import { loadAgent, parseAgentMd } from './tools/agent-loader'
 import { applyOverride, loadSmolJson, type AgentOverride } from './tools/smol-config'
 
@@ -10,10 +10,10 @@ const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)))
 const SKILLS_DIR = join(PKG_ROOT, 'skills')
 const COMMANDS_DIR = join(PKG_ROOT, 'commands')
 
-const COMMANDS = ['smol-plan', 'smol-build', 'smol-review', 'smol-auto', 'smol-fast', 'smol-map'] as const
+const COMMANDS = ['smol-plan', 'smol-build', 'smol-review', 'smol-auto', 'smol-fast'] as const
 
 const POINTER =
-  '<smol>Check .smol/codemap.md and .smol/wiki/{memory,preferences,pitfalls}.md when relevant. ' +
+  '<smol>Check .smol/wiki/{memory,preferences,pitfalls}.md when relevant. ' +
   'Append new insights to wiki via the smol_wiki tool (append-only, dated, English, ≤200 chars per entry).</smol>'
 
 const WIKI_FILES: Record<string, string> = {
@@ -71,8 +71,6 @@ async function runCompacting(
   ctx: { projectRoot: string },
   output: { context: string[]; prompt?: string },
 ): Promise<void> {
-  const codemap = await readHead(join(ctx.projectRoot, '.smol/codemap.md'))
-  if (codemap) output.context.push(`# .smol/codemap.md (head)\n${codemap}`)
   const plan = await latestPlan(ctx.projectRoot)
   if (plan) output.context.push(`# .smol/plans/<latest>\n${plan}`)
 }
@@ -145,7 +143,7 @@ async function runConfig(
   // Register smol agents under their own keys (do not overwrite build/plan).
   config.agent.conductor = await buildAgentConfig('conductor', 'primary', overrides.conductor, ctx.agentRoot)
   config.agent.planner = await buildAgentConfig('planner', 'primary', overrides.planner, ctx.agentRoot)
-  for (const name of ['coder', 'reviewer', 'mapper', 'scout'] as const) {
+  for (const name of ['coder', 'reviewer', 'scout'] as const) {
     config.agent[name] = await buildAgentConfig(name, 'subagent', overrides[name], ctx.agentRoot)
   }
   // Demote built-in plan so Planner owns the plan slot. Keep build visible
@@ -212,7 +210,6 @@ export const SmolPlugin: Plugin = async (context) => {
       )
     },
     tool: {
-      smol_codemap: smolCodemapTool,
       smol_wiki: smolWikiTool,
       smol_plan: smolPlanTool,
     },

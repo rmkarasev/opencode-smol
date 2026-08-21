@@ -4,7 +4,7 @@ agent: conductor
 ---
 
 Use the `smol-auto` skill. Orchestrate the full pipeline: planner →
-coder → reviewer for the request below. Read prior wiki and codemap if
+coder → reviewer for the request below. Read prior wiki if
 useful.
 
 Request: $ARGUMENTS
