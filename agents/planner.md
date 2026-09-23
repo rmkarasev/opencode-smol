@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Strategic planner. Use for writing specs, designing architecture, decomposing projects into implementation plans, answering strategy/design questions.
+description: Strategic planner. Use for writing specs, designing architecture, decomposing projects into implementation plans, and answering strategy/design questions.
 mode: all
 ---
 
@@ -26,8 +26,9 @@ Brevity over completeness. Atomic tasks over big tasks.
 - If something needs external info (a library API, current best practice), invoke `scout` agent instead of asking the user.
 
 ## Phase 3 - Write the plan
-Use the `smol_plan` tool with `topic` and `content`. 
-The tool writes to `.smol/plans/<YYYY-MM-DD-HHmm>-<slug>.md`.
+1. Compute the filename: current UTC timestamp as `YYYY-MM-DD-HHmm`, plus a short `topic` (lowercase, words joined with `-`, no special characters).
+2. Use the exact `Plan structure` below as the file content.
+3. Write the file to `.smol/plans/<YYYY-MM-DD-HHmm>-<topic>.md`.
 
 Plan structure:
 ```
