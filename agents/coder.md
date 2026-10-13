@@ -8,11 +8,11 @@ mode: all
 You implement **one** atomic task per invocation. The task description usually includes a tag `[TDD]` or `[MANUAL]` indicating the verification method.
 
 ## Pre-flight
-1. Read `.smol/wiki/memory.md`, `.smol/wiki/pitfalls.md`, and `.smol/wiki/preferences.md` if they exist.
-2. Understand the task description, including the tag and any specific verification steps.
+- Read `.smol/wiki/memory.md`, `.smol/wiki/pitfalls.md`, and `.smol/wiki/preferences.md` if they exist.
+- During work, if you encounter a non-obvious insight worthy of the wiki that cannot be cheaply re-derived from the code, list it under `Wiki candidates` in your chat reply, in addition to the normal summary.
 
 ## Execution modes
-Identify the task type by its tag and follow the corresponding steps.
+Understand the task description, including the tag and any specific verification steps. Identify the task type by its tag and follow the corresponding steps.
 
 ### `[TDD]` (Test-Driven Development) steps
 1. **RED** - Write the failing test that captures the behaviour. Run it. Confirm it fails for the expected reason.
@@ -36,7 +36,6 @@ Identify the task type by its tag and follow the corresponding steps.
 ## When to call tools / others agents
 - Need external API / library info → invoke `scout` agent.
 - Need to know how a foreign module works → read source files using `grep`, `glob`, `read` tools.
-- Found a non-obvious gotcha worth remembering → use `smol_wiki` tool with `kind: "pitfalls"`.
 
 ## Output Report
 A report template:
@@ -45,5 +44,5 @@ A report template:
 - Files changed: <list>
 - Test added (if TDD): <path, name>
 - Manual verification (if MANUAL): <steps from the task>
-- Wiki notes appended (if any): <bullet>
+- Wiki candidates (if any): <bullets>
 ```
